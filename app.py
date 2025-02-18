@@ -80,7 +80,7 @@ use_rag_workspace = st.sidebar.checkbox("Use RAG Workspace")
 workspace_id = "5a64501c-a4d1-45dd-bd8c-d69a87bac162" if use_rag_workspace else ""
 
 question = st.text_area("Enter your question")
-
+st.text("Some example of question for testing:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
 if "response_3gpp" not in st.session_state:
     st.session_state.response_3gpp = None
 if "response_capgemini" not in st.session_state:
