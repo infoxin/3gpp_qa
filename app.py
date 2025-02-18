@@ -22,7 +22,7 @@ def query_3gpp_rag(question):
     data = {"question": question}
     
     try:
-        response = requests.post(api_url, json=data, timeout=30)
+        response = requests.post(api_url, json=data, timeout=30000)
         if response.status_code == 200:
             result = response.json()
             return result
