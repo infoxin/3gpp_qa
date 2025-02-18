@@ -60,7 +60,7 @@ def query_capgemini(question, api_key, model_name, provider, workspace_id):
     }
     
     try:
-        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30)
+        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30000)
         if response.status_code == 200:
             return response.json()
         else:
