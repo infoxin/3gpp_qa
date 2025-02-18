@@ -31,7 +31,7 @@ def query_3gpp_rag(question):
     except Exception as e:
         return {"error": str(e)}
 
-def query_capgemini(question, api_key, model_name, provider):
+def query_capgemini(question, api_key, model_name, provider, workspace_id):
     url = "https://api.generative.engine.capgemini.com/v2/llm/invoke"
     headers = {
         "accept": "application/json",
@@ -47,9 +47,9 @@ def query_capgemini(question, api_key, model_name, provider):
             "files": [],
             "modelName": model_name,
             "provider": provider,
-            "systemPrompt": "You are a helpful and kind AI assistant for answering questions. Please provide the file name from which the model generated the answer.",
+            "systemPrompt": "You are a helpful and kind AI assistant.",
             "sessionId": str(uuid.uuid4()),
-            "workspaceId": "5a64501c-a4d1-45dd-bd8c-d69a87bac162",
+            "workspaceId": workspace_id if workspace_id else None,
             "modelKwargs": {
                 "maxTokens": 512,
                 "temperature": 0.6,
@@ -68,7 +68,7 @@ def query_capgemini(question, api_key, model_name, provider):
     except Exception as e:
         return {"error": str(e)}
 
-st.title("3GPP RAG Chatbot & Capgemini Generative Engine RAG")
+st.title("3GPP RAG Chatbot & Capgemini Generative Engine")
 
 st.sidebar.header("Capgemini API Settings")
 api_key = st.sidebar.text_input("Enter Capgemini API Key", type="password")
@@ -76,8 +76,10 @@ model_name = st.sidebar.selectbox("Select Model", list(MODEL_PROVIDER_MAP.keys()
 provider = MODEL_PROVIDER_MAP[model_name]
 st.sidebar.write(f"Provider: {provider}")
 
+use_rag_workspace = st.sidebar.checkbox("Use RAG Workspace")
+workspace_id = "rag-workspace-id" if use_rag_workspace else ""
+
 question = st.text_area("Enter your question")
-st.text("Some example of question for testing:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
 
 if "response_3gpp" not in st.session_state:
     st.session_state.response_3gpp = None
@@ -103,7 +105,7 @@ with col2:
         elif not api_key:
             st.error("Please enter your Capgemini API key.")
         else:
-            st.session_state.response_capgemini = query_capgemini(question, api_key, model_name, provider)
+            st.session_state.response_capgemini = query_capgemini(question, api_key, model_name, provider, workspace_id)
     if st.session_state.response_capgemini:
         st.subheader("Capgemini API Response")
         st.json(st.session_state.response_capgemini)
