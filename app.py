@@ -47,7 +47,7 @@ def query_capgemini(question, api_key, model_name, provider):
             "files": [],
             "modelName": model_name,
             "provider": provider,
-            "systemPrompt": "You are a helpful and kind AI assistant.",
+            "systemPrompt": "You are a helpful and kind AI assistant for answering questions. Please provide the file name from which the model generated the answer.",
             "sessionId": str(uuid.uuid4()),
             "workspaceId": "5a64501c-a4d1-45dd-bd8c-d69a87bac162",
             "modelKwargs": {
@@ -77,6 +77,7 @@ provider = MODEL_PROVIDER_MAP[model_name]
 st.sidebar.write(f"Provider: {provider}")
 
 question = st.text_area("Enter your question")
+st.text("Some example of question for testing:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
 
 if "response_3gpp" not in st.session_state:
     st.session_state.response_3gpp = None
