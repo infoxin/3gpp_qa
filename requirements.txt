@@ -1,5 +1,0 @@
-# May be incomplete
-streamlit
-requests
-json
-uuid
