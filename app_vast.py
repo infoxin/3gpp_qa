@@ -142,7 +142,7 @@ if st.sidebar.button("Show Status") and vast_ai_api_key:
     st.sidebar.write("Instance Status:", instance_status)
 
 question = st.text_area("Enter your question")
-st.text("Some example of question for testing:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
+st.text("Some example of question for testing Models:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
 
 if "response_3gpp" not in st.session_state:
     st.session_state.response_3gpp = None
