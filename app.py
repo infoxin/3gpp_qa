@@ -77,7 +77,7 @@ provider = MODEL_PROVIDER_MAP[model_name]
 st.sidebar.write(f"Provider: {provider}")
 
 use_rag_workspace = st.sidebar.checkbox("Use RAG Workspace")
-workspace_id = "rag-workspace-id" if use_rag_workspace else ""
+workspace_id = "5a64501c-a4d1-45dd-bd8c-d69a87bac162" if use_rag_workspace else ""
 
 question = st.text_area("Enter your question")
 
