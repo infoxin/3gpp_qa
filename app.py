@@ -47,7 +47,7 @@ def query_capgemini(question, api_key, model_name, provider, workspace_id):
             "files": [],
             "modelName": model_name,
             "provider": provider,
-            "systemPrompt": "You are a helpful and kind AI assistant.Please provide the file tile from which the model generated the answer from.",
+            "systemPrompt": "You are a helpful and kind AI assistant.",
             "sessionId": str(uuid.uuid4()),
             "workspaceId": workspace_id if workspace_id else None,
             "modelKwargs": {
