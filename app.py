@@ -68,7 +68,7 @@ def query_capgemini(question, api_key, model_name, provider):
     except Exception as e:
         return {"error": str(e)}
 
-st.title("3GPP RAG Chatbot & Capgemini Generative Engine")
+st.title("3GPP RAG Chatbot & Capgemini Generative Engine RAG")
 
 st.sidebar.header("Capgemini API Settings")
 api_key = st.sidebar.text_input("Enter Capgemini API Key", type="password")
