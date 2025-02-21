@@ -1,0 +1,12 @@
+# May be incomplete
+transformers
+peft
+langchain
+langchain_community
+langchain_huggingface
+datasets
+faiss-cpu
+streamlit
+fastapi
+uvicorn
+bitsandbytes
