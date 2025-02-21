@@ -1,82 +1,111 @@
-import importlib
+import streamlit as st
 import requests
 import json
-import my_utils
-importlib.reload(my_utils)
-from my_utils import *
-import sys
-import os
-current_working_directory = os.getcwd()
-project_path = current_working_directory
-sys.path.append(project_path)
-# import importlib
+import uuid
 
-def call_together_ai(prompt, max_tokens=1000, temperature=0.2, top_k=40):
-    url = "https://api.together.xyz/v1/chat/completions"
+st.set_page_config(layout="wide")
+
+MODEL_PROVIDER_MAP = {
+    "anthropic.claude-3-5-sonnet-20240620-v1:0": "bedrock",
+    "us.meta.llama3-3-70b-instruct-v1:0": "bedrock",
+    "meta.llama3-70b-instruct-v1:0": "bedrock",
+    "mistral.mistral-large-2402-v1:0": "bedrock",
+    "gemini-2.0-flash-exp": "vertexai",
+    "gemini-1.5-pro-001": "vertexai",
+    "openai.gpt-4o": "azure",
+    "openai.o1-mini": "azure",
+    "openai.o1-preview": "azure"
+}
+
+def query_3gpp_rag(question):
+    api_url = "http://38.29.145.24:40179/generate"
+    data = {"question": question}
+    
+    try:
+        response = requests.post(api_url, json=data, timeout=30000)
+        if response.status_code == 200:
+            result = response.json()
+            return result
+        else:
+            return {"error": f"Error {response.status_code}: {response.text}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+def query_capgemini(question, api_key, model_name, provider, workspace_id):
+    url = "https://api.generative.engine.capgemini.com/v2/llm/invoke"
     headers = {
-        "Authorization": "Bearer 9d93ec297b48bc7b3f2b5272a3a37784e1a8176b5aabdad3a2582985cc39007e",  # 替换为你的together.ai API密钥
+        "accept": "application/json",
+        "x-api-key": api_key,
         "Content-Type": "application/json"
     }
-    payload = {
-        "model": "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo-128K",  # 可根据需求更换模型
-        "messages": prompt,
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-        "top_k": top_k
+    data = {
+        "action": "run",
+        "modelInterface": "langchain",
+        "data": {
+            "mode": "chain",
+            "text": question,
+            "files": [],
+            "modelName": model_name,
+            "provider": provider,
+            "systemPrompt": "You are a helpful and kind AI assistant.",
+            "sessionId": str(uuid.uuid4()),
+            "workspaceId": workspace_id if workspace_id else None,
+            "modelKwargs": {
+                "maxTokens": 512,
+                "temperature": 0.6,
+                "streaming": False,
+                "topP": 0.9
+            }
+        }
     }
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
-    response_data = response.json()
-    # print(response_data)
-    return response_data['choices'][0]['message']['content']
+    
+    try:
+        response = requests.post(url, headers=headers, data=json.dumps(data), timeout=30000)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            return {"error": f"Error {response.status_code}: {response.text}"}
+    except Exception as e:
+        return {"error": str(e)}
 
-def ask_for_input_and_process(RAG_prompt_template_get_answer, RAG_prompt_template_question_augment, retreiver):
-    previous_input = ""
-    while True:
-        user_input = input("\n\nPlease enter your prompt (or type 'exit' to stop): ")
-        if user_input.lower() == 'exit':
-            print("Exiting the program...")
-            break
+st.title("3GPP RAG Chatbot & Capgemini Generative Engine")
 
-        Question = user_input
+st.sidebar.header("Capgemini API Settings")
+api_key = st.sidebar.text_input("Enter Capgemini API Key", type="password")
+model_name = st.sidebar.selectbox("Select Model", list(MODEL_PROVIDER_MAP.keys()))
+provider = MODEL_PROVIDER_MAP[model_name]
+st.sidebar.write(f"Provider: {provider}")
 
-        concatenated_content = get_retrieved_docs_as_string(retriever=retreiver, question=Question)
-        input_prompt = format_good_prompt_RAG_api(
-            prompt_data=RAG_prompt_template_question_augment, context=concatenated_content, question=Question, previous_input=previous_input)
-        response = call_together_ai(input_prompt)
-        # print(response)
-        AUGMENTED_QUESTION = extract_answer(response, keyword="Augmented question")
-        # print("AUGMENTED_QUESTION:",AUGMENTED_QUESTION
-        Questions = "Original question : " + Question + "\nAugmented question " + AUGMENTED_QUESTION
-        print("\n\nOriginal question and augmented question used for improved document search in the database:\n", Questions)
+use_rag_workspace = st.sidebar.checkbox("Use RAG Workspace")
+workspace_id = "5a64501c-a4d1-45dd-bd8c-d69a87bac162" if use_rag_workspace else ""
 
-        concatenated_content = get_retrieved_docs_as_string(retriever=retreiver, question=Questions)
-        input_prompt = format_good_prompt_RAG_api(
-            prompt_data=RAG_prompt_template_get_answer, context=concatenated_content, question=Question, previous_input=previous_input)
+question = st.text_area("Enter your question")
+st.text("Some example of question for testing:\nWhere are discussed LPP procedures?\nWhat are the important points of this 38501-i40 3GPP document?\nWhat is new in 3GPP Release 18?\nWhat is National Roaming, and how does it depend on the home PLMN and visited PLMN?\nWhat is the primary goal of the 5G system in terms of service continuity during inter- and/or intra-access technology changes?")
+if "response_3gpp" not in st.session_state:
+    st.session_state.response_3gpp = None
+if "response_capgemini" not in st.session_state:
+    st.session_state.response_capgemini = None
 
-        response = call_together_ai(input_prompt)
-        final_response = extract_answer(response)
+col1, col2 = st.columns(2)
 
-        print("\n\nModel response (only to original question): \n\n", final_response)
-        previous_input = previous_input + "\n" + Question
+with col1:
+    if st.button("Ask 3GPP RAG API"):
+        if not question:
+            st.error("Please enter a question.")
+        else:
+            st.session_state.response_3gpp = query_3gpp_rag(question)
+    if st.session_state.response_3gpp:
+        st.subheader("3GPP RAG API Response")
+        st.json(st.session_state.response_3gpp)
 
-if __name__ == "__main__":
-    print("\n\n******LOADING THE MODELS AND THE DATABASE ... \n\n")
-
-    embedding_net = HuggingFaceEmbeddings(model_name="BAAI/bge-base-en-v1.5")
-
-    folder_start_path = "/workspace"
-    folder_path_database = "Datasets/Rel-18/Database_Embeddings"
-    forder_path_prompts_get_answer = "prompts/3GPP_RAG_prompt_template.yaml"
-    forder_path_prompts_question_augment = "prompts/3GPP_RAG_prompt_question_augmentation.yaml"
-   
-
-    retreiver = load_embedding_data_base(folder_path=folder_path_database, embedding_net=embedding_net, number_of_chunks=5)
-
-    with open(forder_path_prompts_question_augment, "r", encoding="utf-8") as file:
-        RAG_prompt_question_augmentation_template = yaml.safe_load(file)
-    with open(forder_path_prompts_get_answer, "r", encoding="utf-8") as file:
-        RAG_prompt_get_answer_template = yaml.safe_load(file)
-
-    print("\n\n******LOADING PART COMPLETED! \n\n")
-
-    ask_for_input_and_process(RAG_prompt_get_answer_template, RAG_prompt_question_augmentation_template, retreiver)
+with col2:
+    if st.button("Ask Capgemini API"):
+        if not question:
+            st.error("Please enter a question.")
+        elif not api_key:
+            st.error("Please enter your Capgemini API key.")
+        else:
+            st.session_state.response_capgemini = query_capgemini(question, api_key, model_name, provider, workspace_id)
+    if st.session_state.response_capgemini:
+        st.subheader("Capgemini API Response")
+        st.json(st.session_state.response_capgemini)
